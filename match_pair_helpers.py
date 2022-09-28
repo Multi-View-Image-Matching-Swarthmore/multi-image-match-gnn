@@ -459,6 +459,24 @@ def pairwise_match(opt, pair):
 
         timer.update("viz_match")
 
+    color = np.clip((normed_error - 0) / (1e-3 - 0), 0, 1)
+    make_matching_plot(
+        image0,
+        image1,
+        kpts0,
+        kpts1,
+        mkpts0,
+        mkpts1,
+        color,
+        text,
+        viz_eval_path,
+        opt.show_keypoints,
+        opt.fast_viz,
+        opt.opencv_display,
+        "Relative Pose",
+        small_text,
+    )
+
     if do_viz_eval:
         # Visualize the evaluation results for the image pair.
         # color = np.clip((epi_errs - 0) / (1e-3 - 0), 0, 1)
