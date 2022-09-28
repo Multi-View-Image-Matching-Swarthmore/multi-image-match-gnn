@@ -100,6 +100,8 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
 
     u = get_homogenous_coords(mkpts0[0])
     v = get_homogenous_coords(mkpts1[0])
+    print(u)
+    print(v)
     p = np.linalg.solve(K_1, u)
     q = np.linalg.solve(K_2, v)
     wp_est1 = np.array(R1) @ np.array(depth_1[int(u[0]), int(u[1])] * p)
