@@ -462,12 +462,12 @@ def pairwise_match(opt, pair):
     color = np.clip((np.array(normed_error) - 0) / (1e-3 - 0), 0, 1)
     color = error_colormap(1 - color)
     make_matching_plot(
-        image0,
-        image1,
-        kpts0,
-        kpts1,
-        mkpts0,
-        mkpts1,
+        image0[:10],
+        image1[:10],
+        kpts0[:10],
+        kpts1[:10],
+        mkpts0[:10],
+        mkpts1[:10],
         color,
         text,
         viz_eval_path,
