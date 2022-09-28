@@ -83,7 +83,7 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     u, v = [], []
     K_1 = data_one["K"]
     K_2 = data_two["K"]
-    for i in range(len(mkpts0)):
+    for i in range(3):
         u.append(mkpts0[i])
         v.append(mkpts1[i])
 
