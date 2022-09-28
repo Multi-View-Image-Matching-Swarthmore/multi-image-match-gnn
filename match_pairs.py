@@ -79,52 +79,11 @@ from models.utils import (
     findDistance,
 )
 
+from match_pair_helpers import get_image, pairwise_match
+
 torch.set_grad_enabled(False)
 
 # This function should be defined in (and imported from) models.utils as above
-
-
-def get_image(src, idx):
-
-    im = imread(src + "/images/" + images[idx].name)
-    depth = read_array(
-        src + "/stereo/depth_maps/" + images[idx].name + ".photometric.bin"
-    )
-    min_depth, max_depth = np.percentile(depth, [5, 95])
-    depth[depth < min_depth] = min_depth
-    depth[depth > max_depth] = max_depth
-
-    # reformat data
-    q = images[idx].qvec
-    R = qvec2rotmat(q)
-    T = images[idx].tvec
-    p = images[idx].xys
-    pars = cameras[idx].params
-    K = np.array([[pars[0], 0, pars[2]], [0, pars[1], pars[3]], [0, 0, 1]])
-    pids = images[idx].point3D_ids
-    v = pids >= 0
-    print("Number of (valid) points: {}".format((pids > -1).sum()))
-    print("Number of (total) points: {}".format(v.size))
-
-    # get also the clean depth maps
-    base = ".".join(images[idx].name.split(".")[:-1])
-    with h5py.File(
-        src + "/stereo/depth_maps_clean_300_th_0.10/" + base + ".h5", "r"
-    ) as f:
-        depth_clean = f["depth"][:]
-
-    return {
-        "image": im,
-        "depth_raw": depth,
-        "depth": depth_clean,
-        "K": K,
-        "q": q,
-        "R": R,
-        "T": T,
-        "xys": p,
-        "ids": pids,
-        "valid": v,
-    }
 
 
 if __name__ == "__main__":
@@ -296,7 +255,10 @@ if __name__ == "__main__":
                 "All pairs should have ground truth info for evaluation."
                 'File "{}" needs 38 valid entries per row'.format(opt.input_pairs)
             )
+    pair = pairs[:2]
+    pairwise_match(opt, pair)
 
+    """
     # Load the SuperPoint and SuperGlue models.
     device = "cuda" if torch.cuda.is_available() and not opt.force_cpu else "cpu"
     print('Running inference on device "{}"'.format(device))
@@ -704,3 +666,4 @@ if __name__ == "__main__":
                 aucs[0], aucs[1], aucs[2], prec, ms
             )
         )
+        """
