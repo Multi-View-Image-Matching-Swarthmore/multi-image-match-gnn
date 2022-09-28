@@ -256,5 +256,6 @@ if __name__ == "__main__":
                 'File "{}" needs 38 valid entries per row'.format(opt.input_pairs)
             )
     pair = pairs[:2]
-    pair, mkpts0, mkpts1, data_one, data_two = pairwise_match(opt, pair)
-    calculate_distance(pair, mkpts0, mkpts1, data_one, data_two)
+    # pair, mkpts0, mkpts1, data_one, data_two = pairwise_match(opt, pair)
+    # calculate_distance(pair, mkpts0, mkpts1, data_one, data_two)
+    pairwise_match(opt, pair)

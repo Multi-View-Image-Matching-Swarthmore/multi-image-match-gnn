@@ -98,8 +98,8 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     T1 = -R1 @ data_one["T"]
     T2 = -R2 @ data_two["T"]
 
-    u = get_homogenous_coords(mkpts0[0])
-    v = get_homogenous_coords(mkpts1[0])
+    u = get_homogenous_coords(mkpts0)
+    v = get_homogenous_coords(mkpts1)
     print(u)
     print(v)
     p = np.linalg.solve(K_1, u)
@@ -110,6 +110,7 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     wp_est2 += T2
     error = np.linalg.norm((wp_est1 - wp_est2))
 
+    return error
     print(wp_est1)
     print(wp_est2)
     print(error)
@@ -353,8 +354,12 @@ def pairwise_match(opt, pair):
     mkpts0 = kpts0[valid]
     mkpts1 = kpts1[matches[valid]]
     mconf = conf[valid]
-    return pair, mkpts0, mkpts1, data_one, data_two
-    """
+    # return pair, mkpts0, mkpts1, data_one, data_two
+    normed_error = []
+    for i in range(len(mkpts0)):
+        normed_error.append(
+            calculate_distance(pair, mkpts0[i], mkpts1[i], data_one, data_two)
+        )
     if do_eval:
         # Estimate the pose and compute the pose error.
         assert len(pair) == 38, "Pair does not have ground truth info"
@@ -456,7 +461,8 @@ def pairwise_match(opt, pair):
 
     if do_viz_eval:
         # Visualize the evaluation results for the image pair.
-        color = np.clip((epi_errs - 0) / (1e-3 - 0), 0, 1)
+        # color = np.clip((epi_errs - 0) / (1e-3 - 0), 0, 1)
+        color = np.clip((normed_error - 0) / (1e-3 - 0), 0, 1)
         color = error_colormap(1 - color)
         deg, delta = " deg", "Delta "
         if not opt.fast_viz:
@@ -500,5 +506,5 @@ def pairwise_match(opt, pair):
 
         timer.update("viz_eval")
     timer.print("Finished pairwise evaluation")
-    """
+
     # timer.print("Finished pair {:5} of {:5}".format(i, len(pairs)))
