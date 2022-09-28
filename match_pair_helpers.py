@@ -316,7 +316,8 @@ def pairwise_match(opt, pair):
     mkpts0 = kpts0[valid]
     mkpts1 = kpts1[matches[valid]]
     mconf = conf[valid]
-    print(matches)
+    print(mkpts0[0])
+    print(mkpts1[0])
     """
     if do_eval:
         # Estimate the pose and compute the pose error.
