@@ -90,9 +90,9 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     R1 = data_one["R"]
     R2 = data_two["R"]
     print(R1.shape)
-    print(mkpts0[0])
-    a = pair[mkpts0[0]]
-    b = pair[mkpts1[0]]
+    a = pair[0][mkpts0[0]][mkpts0[1]]
+    b = pair[1][mkpts1[0]][mkpts1[1]]
+    print(a)
     for i in range(3):
         u.append(a)
         v.append(b)
