@@ -356,7 +356,7 @@ def pairwise_match(opt, pair):
     mconf = conf[valid]
     # return pair, mkpts0, mkpts1, data_one, data_two
     normed_error = []
-    for i in range(len(mkpts0)):
+    for i in range(10):  # len(mkpts0)
         normed_error.append(
             calculate_distance(pair, mkpts0[i], mkpts1[i], data_one, data_two)
         )
