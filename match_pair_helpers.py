@@ -88,6 +88,7 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     K_1 = data_one["K"]
     K_2 = data_two["K"]
 
+    print(pair)
     depth_1 = data_one["depth"]
     depth_2 = data_two["depth"]
 
