@@ -90,6 +90,7 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     R1 = data_one["R"]
     R2 = data_two["R"]
     print(R1.shape)
+    print(mkpts0[0])
     a = pair[mkpts0[0]]
     b = pair[mkpts1[0]]
     for i in range(3):
@@ -98,7 +99,7 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
 
     p = np.linalg.solve(K_1, a)
     q = np.linalg.solve(K_2, b)
-    print(mkpts0[0][0])
+    print(a)
     wp_est1 = np.array(R1) @ np.array(depth_1[a[0]][b[1]] * p)
     print(wp_est1)
 
@@ -267,7 +268,6 @@ def pairwise_match(opt, pair):
         "q": dataList[1]["q"],
         "K": dataList[1]["K"],
     }
-    print(data_one)
     validPoints1 = []
     validPoints2 = []
     groundTruthMatches = []
