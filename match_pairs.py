@@ -48,23 +48,20 @@ from itertools import count
 from pathlib import Path
 import argparse
 import random
-from turtle import distance
 import numpy as np
-import matplotlib.cm as cm
 import torch
 
 
 
 import numpy as np
 from colmap.scripts.python.read_write_model import read_model, qvec2rotmat
-from colmap.scripts.python.read_dense import read_array
+from colmap.scripts.python.read_write_dense import read_array
 from imageio.v2 import imread
-import matplotlib.pyplot as plt
 import h5py
 #import deepdish as dd
 from time import time
 
-
+from matplotlib import cm
 
 from models.matching import Matching
 from models.utils import (compute_pose_error, compute_epipolar_error,
@@ -404,7 +401,6 @@ if __name__ == '__main__':
             x2s = keypoint_pairs[j][2]#Superglue xys from image 2
             y2s = keypoint_pairs[j][3]
             distance1 = 10000000
-           
             for k in range(len(dataList[0]['xys'])):
                 x1c = dataList[0]['xys'][k][0]#Colmap xys from image 1
                 y1c = dataList[0]['xys'][k][1]
@@ -435,18 +431,7 @@ if __name__ == '__main__':
                     
                     print("ADDED TO GROUND TRUTH MATCHES") 
                     groundTruthMatches.append([validPoints1[f],validPoints1[f][4],validPoints1[f][3],validPoints2[f][3]])
-           
-                #Next: get validPoints in a format to pass to the graphing funcs
-       
-                
-        
-
-             
-        
-        
-        
-       
-        
+        # Next: get validPoints in a format to pass to the graphing funcs
         # Keep the matching keypoints. **Next do own version of this but the threshold isn't just if -1 determined by s.glue but by colmap comaprison 
         valid = matches > -1
         mkpts0 = kpts0[valid]
