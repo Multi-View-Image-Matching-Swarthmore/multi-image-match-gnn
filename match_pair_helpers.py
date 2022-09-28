@@ -89,7 +89,7 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
 
     R1 = data_one["R"]
     R2 = data_two["R"]
-    print(R1)
+    print(R1.shape)
 
     for i in range(3):
         u.append(mkpts0[i])
@@ -98,7 +98,7 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     p = np.linalg.solve(K_1, u)
     q = np.linalg.solve(K_2, v)
 
-    wp_est1 = R1 @ (depth_1 * p)
+    wp_est1 = np.array(R1) @ np.array(depth_1 * p)
     print(wp_est1)
 
 
