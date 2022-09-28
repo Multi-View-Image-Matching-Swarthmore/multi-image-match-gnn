@@ -229,7 +229,7 @@ def pairwise_match(opt, pair):
         dataList[
             j
         ] = data  # Each element in dataList is a dictionary containing the info about an image returned from get_image().
-
+    print(data)
     validPoints1 = []
     validPoints2 = []
     groundTruthMatches = []
