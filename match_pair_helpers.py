@@ -460,6 +460,7 @@ def pairwise_match(opt, pair):
         timer.update("viz_match")
 
     color = np.clip((np.array(normed_error) - 0) / (1e-3 - 0), 0, 1)
+    color = error_colormap(1 - color)
     make_matching_plot(
         image0,
         image1,
