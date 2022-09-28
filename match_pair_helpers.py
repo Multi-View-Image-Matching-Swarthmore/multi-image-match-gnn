@@ -79,6 +79,20 @@ def get_image(opt, src, idx):
     }
 
 
+def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
+    u, v = [], []
+    K_1 = data_one["K"]
+    K_2 = data_two["K"]
+    for i in range(len(mkpts0)):
+        u.append(mkpts0[i])
+        v.append(mkpts1[i])
+
+    p = np.linalg.solve(K_1, u)
+    q = np.linalg.solve(K_2, v)
+    print(p)
+    print(q)
+
+
 def pairwise_match(opt, pair):
     # Load models
     device = "cuda" if torch.cuda.is_available() and not opt.force_cpu else "cpu"
@@ -234,12 +248,14 @@ def pairwise_match(opt, pair):
         "depth": dataList[0]["depth"],
         "T": dataList[0]["T"],
         "q": dataList[0]["q"],
+        "K": dataList[0]["K"],
     }
     data_two = {
         "R": dataList[1]["R"],
         "depth": dataList[1]["depth"],
         "T": dataList[1]["T"],
         "q": dataList[1]["q"],
+        "K": dataList[1]["K"],
     }
     print(data_one)
     validPoints1 = []
@@ -316,8 +332,7 @@ def pairwise_match(opt, pair):
     mkpts0 = kpts0[valid]
     mkpts1 = kpts1[matches[valid]]
     mconf = conf[valid]
-    print(mkpts0[0])
-    print(mkpts1[0])
+    return pair, mkpts0, mkpts1, data_one, data_two
     """
     if do_eval:
         # Estimate the pose and compute the pose error.

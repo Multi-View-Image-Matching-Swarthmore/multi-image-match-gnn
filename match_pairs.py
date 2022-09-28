@@ -79,7 +79,7 @@ from models.utils import (
     findDistance,
 )
 
-from match_pair_helpers import get_image, pairwise_match
+from match_pair_helpers import get_image, pairwise_match, calculate_distance
 
 torch.set_grad_enabled(False)
 
@@ -256,4 +256,5 @@ if __name__ == "__main__":
                 'File "{}" needs 38 valid entries per row'.format(opt.input_pairs)
             )
     pair = pairs[:2]
-    pairwise_match(opt, pair)
+    pair, mkpts0, mkpts1, data_one, data_two = pairwise_match(opt, pair)
+    calculate_distance(pair, mkpts0, mkpts1, data_one, data_two)
