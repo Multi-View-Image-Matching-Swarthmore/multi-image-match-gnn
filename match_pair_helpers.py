@@ -96,7 +96,8 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     for i in range(3):
         u.append(a)
         v.append(b)
-
+    print(K_1.shape)
+    print(a.shape)
     p = np.linalg.solve(K_1, a)
     q = np.linalg.solve(K_2, b)
     print(a)
