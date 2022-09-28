@@ -317,6 +317,9 @@ def pairwise_match(opt, pair):
     mkpts1 = kpts1[matches[valid]]
     mconf = conf[valid]
 
+    print(mkpts0)
+    print(mkpts1)
+    """
     if do_eval:
         # Estimate the pose and compute the pose error.
         assert len(pair) == 38, "Pair does not have ground truth info"
@@ -462,4 +465,5 @@ def pairwise_match(opt, pair):
 
         timer.update("viz_eval")
     timer.print("Finished pairwise evaluation")
+    """
     # timer.print("Finished pair {:5} of {:5}".format(i, len(pairs)))
