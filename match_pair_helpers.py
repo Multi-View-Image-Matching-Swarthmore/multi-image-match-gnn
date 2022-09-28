@@ -241,6 +241,7 @@ def pairwise_match(opt, pair):
         "T": dataList[1]["T"],
         "q": dataList[1]["q"],
     }
+    print(data_one)
     validPoints1 = []
     validPoints2 = []
     groundTruthMatches = []
