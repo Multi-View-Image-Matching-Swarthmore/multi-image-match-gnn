@@ -80,7 +80,7 @@ def get_image(opt, src, idx):
 
 
 def get_homogenous_coords(pt):
-    return np.array([pt[0], pt[1], 1])
+    return np.array([pt[1], pt[0], 1])
 
 
 def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
