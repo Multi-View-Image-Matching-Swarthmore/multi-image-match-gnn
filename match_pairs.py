@@ -3,7 +3,7 @@
 # %BANNER_BEGIN%
 # ---------------------------------------------------------------------
 # %COPYRIGHT_BEGIN%
-# 
+#
 #  Magic Leap, Inc. ("COMPANY") CONFIDENTIAL
 #
 #  Unpublished Copyright (c) 2020
@@ -52,32 +52,44 @@ import numpy as np
 import torch
 
 
-
 import numpy as np
 from colmap.scripts.python.read_write_model import read_model, qvec2rotmat
 from colmap.scripts.python.read_write_dense import read_array
 from imageio.v2 import imread
 import h5py
-#import deepdish as dd
+
+# import deepdish as dd
 from time import time
 
 from matplotlib import cm
 
 from models.matching import Matching
-from models.utils import (compute_pose_error, compute_epipolar_error,
-                          estimate_pose, make_matching_plot,
-                          error_colormap, AverageTimer, pose_auc, read_image,
-                          rotate_intrinsics, rotate_pose_inplane,
-                          scale_intrinsics, findDistance)
+from models.utils import (
+    compute_pose_error,
+    compute_epipolar_error,
+    estimate_pose,
+    make_matching_plot,
+    error_colormap,
+    AverageTimer,
+    pose_auc,
+    read_image,
+    rotate_intrinsics,
+    rotate_pose_inplane,
+    scale_intrinsics,
+    findDistance,
+)
 
 torch.set_grad_enabled(False)
 
-#This function should be defined in (and imported from) models.utils as above
+# This function should be defined in (and imported from) models.utils as above
+
 
 def get_image(src, idx):
-    
-    im = imread(src + '/images/' + images[idx].name)
-    depth = read_array(src + '/stereo/depth_maps/' + images[idx].name + '.photometric.bin')
+
+    im = imread(src + "/images/" + images[idx].name)
+    depth = read_array(
+        src + "/stereo/depth_maps/" + images[idx].name + ".photometric.bin"
+    )
     min_depth, max_depth = np.percentile(depth, [5, 95])
     depth[depth < min_depth] = min_depth
     depth[depth > max_depth] = max_depth
@@ -91,136 +103,189 @@ def get_image(src, idx):
     K = np.array([[pars[0], 0, pars[2]], [0, pars[1], pars[3]], [0, 0, 1]])
     pids = images[idx].point3D_ids
     v = pids >= 0
-    print('Number of (valid) points: {}'.format((pids > -1).sum()))
-    print('Number of (total) points: {}'.format(v.size))
-    
-    
+    print("Number of (valid) points: {}".format((pids > -1).sum()))
+    print("Number of (total) points: {}".format(v.size))
+
     # get also the clean depth maps
-    base = '.'.join(images[idx].name.split('.')[:-1])
-    with h5py.File(src + '/stereo/depth_maps_clean_300_th_0.10/' + base + '.h5', 'r') as f:
-        depth_clean = f['depth'][:]
+    base = ".".join(images[idx].name.split(".")[:-1])
+    with h5py.File(
+        src + "/stereo/depth_maps_clean_300_th_0.10/" + base + ".h5", "r"
+    ) as f:
+        depth_clean = f["depth"][:]
 
     return {
-        'image': im,
-        'depth_raw': depth,
-        'depth': depth_clean,
-        'K': K,
-        'q': q,
-        'R': R,
-        'T': T,
-        'xys': p,
-        'ids': pids,
-        'valid': v}
+        "image": im,
+        "depth_raw": depth,
+        "depth": depth_clean,
+        "K": K,
+        "q": q,
+        "R": R,
+        "T": T,
+        "xys": p,
+        "ids": pids,
+        "valid": v,
+    }
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='Image pair matching and pose evaluation with SuperGlue',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        description="Image pair matching and pose evaluation with SuperGlue",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
     parser.add_argument(
-        '--input_pairs', type=str, default='assets/reichstag_image_pairs.txt',
-        help='Path to the list of image pairs')
+        "--input_pairs",
+        type=str,
+        default="assets/reichstag_image_pairs.txt",
+        help="Path to the list of image pairs",
+    )
     parser.add_argument(
-        '--input_dir', type=str, default='data/phototourism/reichstag/dense',
-        help='Path to the directory that contains the data')
+        "--input_dir",
+        type=str,
+        default="data/phototourism/reichstag/dense",
+        help="Path to the directory that contains the data",
+    )
     parser.add_argument(
-        '--output_dir', type=str, default='dump_match_pairs/',
-        help='Path to the directory in which the .npz results and optionally,'
-             'the visualization images are written')
+        "--output_dir",
+        type=str,
+        default="dump_match_pairs/",
+        help="Path to the directory in which the .npz results and optionally,"
+        "the visualization images are written",
+    )
 
     parser.add_argument(
-        '--max_length', type=int, default=-1, #changed from -1 to 1
-        help='Maximum number of pairs to evaluate')
+        "--max_length",
+        type=int,
+        default=-1,  # changed from -1 to 1
+        help="Maximum number of pairs to evaluate",
+    )
     parser.add_argument(
-        '--resize', type=int, nargs='+', default=[640, 480],
-        help='Resize the input image before running inference. If two numbers, '
-             'resize to the exact dimensions, if one number, resize the max '
-             'dimension, if -1, do not resize')
+        "--resize",
+        type=int,
+        nargs="+",
+        default=[640, 480],
+        help="Resize the input image before running inference. If two numbers, "
+        "resize to the exact dimensions, if one number, resize the max "
+        "dimension, if -1, do not resize",
+    )
     parser.add_argument(
-        '--resize_float', action='store_true',
-        help='Resize the image after casting uint8 to float')
+        "--resize_float",
+        action="store_true",
+        help="Resize the image after casting uint8 to float",
+    )
 
     parser.add_argument(
-        '--superglue', choices={'indoor', 'outdoor'}, default='outdoor',
-        help='SuperGlue weights')
+        "--superglue",
+        choices={"indoor", "outdoor"},
+        default="outdoor",
+        help="SuperGlue weights",
+    )
     parser.add_argument(
-        '--max_keypoints', type=int, default=1024,
-        help='Maximum number of keypoints detected by Superpoint'
-             ' (\'-1\' keeps all keypoints)')
+        "--max_keypoints",
+        type=int,
+        default=1024,
+        help="Maximum number of keypoints detected by Superpoint"
+        " ('-1' keeps all keypoints)",
+    )
     parser.add_argument(
-        '--keypoint_threshold', type=float, default=0.005,
-        help='SuperPoint keypoint detector confidence threshold')
+        "--keypoint_threshold",
+        type=float,
+        default=0.005,
+        help="SuperPoint keypoint detector confidence threshold",
+    )
     parser.add_argument(
-        '--nms_radius', type=int, default=4,
-        help='SuperPoint Non Maximum Suppression (NMS) radius'
-        ' (Must be positive)')
+        "--nms_radius",
+        type=int,
+        default=4,
+        help="SuperPoint Non Maximum Suppression (NMS) radius" " (Must be positive)",
+    )
     parser.add_argument(
-        '--sinkhorn_iterations', type=int, default=20,
-        help='Number of Sinkhorn iterations performed by SuperGlue')
+        "--sinkhorn_iterations",
+        type=int,
+        default=20,
+        help="Number of Sinkhorn iterations performed by SuperGlue",
+    )
     parser.add_argument(
-        '--match_threshold', type=float, default=0.2,
-        help='SuperGlue match threshold')
+        "--match_threshold", type=float, default=0.2, help="SuperGlue match threshold"
+    )
 
     parser.add_argument(
-        '--viz', action='store_true',
-        help='Visualize the matches and dump the plots')
+        "--viz", action="store_true", help="Visualize the matches and dump the plots"
+    )
     parser.add_argument(
-        '--eval', action='store_true',
-        help='Perform the evaluation'
-             ' (requires ground truth pose and intrinsics)')
+        "--eval",
+        action="store_true",
+        help="Perform the evaluation" " (requires ground truth pose and intrinsics)",
+    )
     parser.add_argument(
-        '--fast_viz', action='store_true',
-        help='Use faster image visualization with OpenCV instead of Matplotlib')
+        "--fast_viz",
+        action="store_true",
+        help="Use faster image visualization with OpenCV instead of Matplotlib",
+    )
     parser.add_argument(
-        '--cache', action='store_true',
-        help='Skip the pair if output .npz files are already found')
+        "--cache",
+        action="store_true",
+        help="Skip the pair if output .npz files are already found",
+    )
     parser.add_argument(
-        '--show_keypoints', action='store_true',
-        help='Plot the keypoints in addition to the matches')
+        "--show_keypoints",
+        action="store_true",
+        help="Plot the keypoints in addition to the matches",
+    )
     parser.add_argument(
-        '--viz_extension', type=str, default='png', choices=['png', 'pdf'],
-        help='Visualization file extension. Use pdf for highest-quality.')
+        "--viz_extension",
+        type=str,
+        default="png",
+        choices=["png", "pdf"],
+        help="Visualization file extension. Use pdf for highest-quality.",
+    )
     parser.add_argument(
-        '--opencv_display', action='store_true',
-        help='Visualize via OpenCV before saving output images')
+        "--opencv_display",
+        action="store_true",
+        help="Visualize via OpenCV before saving output images",
+    )
     parser.add_argument(
-        '--shuffle', action='store_true',
-        help='Shuffle ordering of pairs before processing')
+        "--shuffle",
+        action="store_true",
+        help="Shuffle ordering of pairs before processing",
+    )
     parser.add_argument(
-        '--force_cpu', action='store_true',
-        help='Force pytorch to run in CPU mode.')
+        "--force_cpu", action="store_true", help="Force pytorch to run in CPU mode."
+    )
 
     opt = parser.parse_args()
     print(opt)
-    
-    assert not (opt.opencv_display and not opt.viz), 'Must use --viz with --opencv_display'
-    
-    assert not (opt.opencv_display and not opt.fast_viz), 'Cannot use --opencv_display without --fast_viz'
-    
-    assert not (opt.fast_viz and not opt.viz), 'Must use --viz with --fast_viz'
-    
-    assert not (opt.fast_viz and opt.viz_extension == 'pdf'), 'Cannot use pdf extension with --fast_viz'
-    
+
+    assert not (
+        opt.opencv_display and not opt.viz
+    ), "Must use --viz with --opencv_display"
+
+    assert not (
+        opt.opencv_display and not opt.fast_viz
+    ), "Cannot use --opencv_display without --fast_viz"
+
+    assert not (opt.fast_viz and not opt.viz), "Must use --viz with --fast_viz"
+
+    assert not (
+        opt.fast_viz and opt.viz_extension == "pdf"
+    ), "Cannot use pdf extension with --fast_viz"
+
     if len(opt.resize) == 2 and opt.resize[1] == -1:
         opt.resize = opt.resize[0:1]
     if len(opt.resize) == 2:
-        print('Will resize to {}x{} (WxH)'.format(
-            opt.resize[0], opt.resize[1]))
+        print("Will resize to {}x{} (WxH)".format(opt.resize[0], opt.resize[1]))
     elif len(opt.resize) == 1 and opt.resize[0] > 0:
-        print('Will resize max dimension to {}'.format(opt.resize[0]))
+        print("Will resize max dimension to {}".format(opt.resize[0]))
     elif len(opt.resize) == 1:
-        print('Will not resize images')
+        print("Will not resize images")
     else:
-        raise ValueError('Cannot specify more than two integers for --resize')
+        raise ValueError("Cannot specify more than two integers for --resize")
 
-    with open(opt.input_pairs, 'r') as f:
+    with open(opt.input_pairs, "r") as f:
         pairs = [l.split() for l in f.readlines()]
-        
 
     if opt.max_length > -1:
-        pairs = pairs[0:np.min([len(pairs), opt.max_length])]
+        pairs = pairs[0 : np.min([len(pairs), opt.max_length])]
 
     if opt.shuffle:
         random.Random(0).shuffle(pairs)
@@ -228,88 +293,88 @@ if __name__ == '__main__':
     if opt.eval:
         if not all([len(p) == 38 for p in pairs]):
             raise ValueError(
-                'All pairs should have ground truth info for evaluation.'
-                'File \"{}\" needs 38 valid entries per row'.format(opt.input_pairs))
+                "All pairs should have ground truth info for evaluation."
+                'File "{}" needs 38 valid entries per row'.format(opt.input_pairs)
+            )
 
     # Load the SuperPoint and SuperGlue models.
-    device = 'cuda' if torch.cuda.is_available() and not opt.force_cpu else 'cpu'
-    print('Running inference on device \"{}\"'.format(device))
+    device = "cuda" if torch.cuda.is_available() and not opt.force_cpu else "cpu"
+    print('Running inference on device "{}"'.format(device))
     config = {
-        'superpoint': {
-            'nms_radius': opt.nms_radius,
-            'keypoint_threshold': opt.keypoint_threshold,
-            'max_keypoints': opt.max_keypoints
+        "superpoint": {
+            "nms_radius": opt.nms_radius,
+            "keypoint_threshold": opt.keypoint_threshold,
+            "max_keypoints": opt.max_keypoints,
         },
-        'superglue': {
-            'weights': opt.superglue,
-            'sinkhorn_iterations': opt.sinkhorn_iterations,
-            'match_threshold': opt.match_threshold,
-        }
+        "superglue": {
+            "weights": opt.superglue,
+            "sinkhorn_iterations": opt.sinkhorn_iterations,
+            "match_threshold": opt.match_threshold,
+        },
     }
     matching = Matching(config).eval().to(device)
-    
+
     # Create the output directories if they do not exist already.
     input_dir = Path(opt.input_dir)
-    image_dir = input_dir / 'images'
-    print('Looking for data in directory \"{}\"'.format(input_dir))
+    image_dir = input_dir / "images"
+    print('Looking for data in directory "{}"'.format(input_dir))
     output_dir = Path(opt.output_dir)
     output_dir.mkdir(exist_ok=True, parents=True)
-    print('Will write matches to directory \"{}\"'.format(output_dir))
+    print('Will write matches to directory "{}"'.format(output_dir))
     if opt.eval:
-        print('Will write evaluation results',
-              'to directory \"{}\"'.format(output_dir))
+        print("Will write evaluation results", 'to directory "{}"'.format(output_dir))
     if opt.viz:
-        print('Will write visualization images to',
-              'directory \"{}\"'.format(output_dir))
+        print("Will write visualization images to", 'directory "{}"'.format(output_dir))
 
     timer = AverageTimer(newline=True)
-    
-   
+
     for i, pair in enumerate(pairs):
-        name0, name1 = pair[:2] 
+        name0, name1 = pair[:2]
         stem0, stem1 = Path(name0).stem, Path(name1).stem
-        matches_path = output_dir / '{}_{}_matches.npz'.format(stem0, stem1)
-        eval_path = output_dir / '{}_{}_evaluation.npz'.format(stem0, stem1)
-        viz_path = output_dir / '{}_{}_matches.{}'.format(stem0, stem1, opt.viz_extension)
-        viz_eval_path = output_dir / \
-            '{}_{}_evaluation.{}'.format(stem0, stem1, opt.viz_extension)
+        matches_path = output_dir / "{}_{}_matches.npz".format(stem0, stem1)
+        eval_path = output_dir / "{}_{}_evaluation.npz".format(stem0, stem1)
+        viz_path = output_dir / "{}_{}_matches.{}".format(
+            stem0, stem1, opt.viz_extension
+        )
+        viz_eval_path = output_dir / "{}_{}_evaluation.{}".format(
+            stem0, stem1, opt.viz_extension
+        )
 
         # Handle --cache logic.
         do_match = True
         do_eval = opt.eval
         do_viz = opt.viz
         do_viz_eval = opt.eval and opt.viz
-        
+
         if opt.cache:
             if matches_path.exists():
                 try:
                     results = np.load(matches_path)
                 except:
-                    raise IOError('Cannot load matches .npz file: %s' %
-                                  matches_path)
+                    raise IOError("Cannot load matches .npz file: %s" % matches_path)
 
-                kpts0, kpts1 = results['keypoints0'], results['keypoints1']
-                matches, conf = results['matches'], results['match_confidence']
+                kpts0, kpts1 = results["keypoints0"], results["keypoints1"]
+                matches, conf = results["matches"], results["match_confidence"]
                 do_match = False
             if opt.eval and eval_path.exists():
                 try:
                     results = np.load(eval_path)
                 except:
-                    raise IOError('Cannot load eval .npz file: %s' % eval_path)
-                err_R, err_t = results['error_R'], results['error_t']
-                precision = results['precision']
-                matching_score = results['matching_score']
-                num_correct = results['num_correct']
-                epi_errs = results['epipolar_errors']
+                    raise IOError("Cannot load eval .npz file: %s" % eval_path)
+                err_R, err_t = results["error_R"], results["error_t"]
+                precision = results["precision"]
+                matching_score = results["matching_score"]
+                num_correct = results["num_correct"]
+                epi_errs = results["epipolar_errors"]
                 do_eval = False
             if opt.viz and viz_path.exists():
-                do_viz = False 
+                do_viz = False
             if opt.viz and opt.eval and viz_eval_path.exists():
                 do_viz_eval = False
-            timer.update('load_cache')
+            timer.update("load_cache")
 
         if not (do_match or do_eval or do_viz or do_viz_eval):
-            timer.print('Finished pair {:5} of {:5}'.format(i, len(pairs)))
+            timer.print("Finished pair {:5} of {:5}".format(i, len(pairs)))
             continue
 
         # If a rotation integer is provided (e.g. from EXIF data), use it:
@@ -320,127 +385,155 @@ if __name__ == '__main__':
 
         # Load the image pair.
         image0, inp0, scales0 = read_image(
-            image_dir / name0, device, opt.resize, rot0, opt.resize_float)
+            image_dir / name0, device, opt.resize, rot0, opt.resize_float
+        )
         image1, inp1, scales1 = read_image(
-            image_dir / name1, device, opt.resize, rot1, opt.resize_float)
+            image_dir / name1, device, opt.resize, rot1, opt.resize_float
+        )
         if image0 is None or image1 is None:
-            print('Problem reading image pair: {} {}'.format(
-                image_dir/name0, image_dir/name1))
+            print(
+                "Problem reading image pair: {} {}".format(
+                    image_dir / name0, image_dir / name1
+                )
+            )
             exit(1)
-        timer.update('load_image')
-        
+        timer.update("load_image")
+
         if do_match:
             # Perform the matching.
-            pred = matching({'image0': inp0, 'image1': inp1})
+            pred = matching({"image0": inp0, "image1": inp1})
             pred = {k: v[0].cpu().numpy() for k, v in pred.items()}
-            
-            kpts0, kpts1 = pred['keypoints0'], pred['keypoints1']
-            matches, conf = pred['matches0'], pred['matching_scores0']
-            timer.update('matcher')
+
+            kpts0, kpts1 = pred["keypoints0"], pred["keypoints1"]
+            matches, conf = pred["matches0"], pred["matching_scores0"]
+            timer.update("matcher")
 
             # Write the matches to disk.
-            out_matches = {'keypoints0': kpts0, 'keypoints1': kpts1,
-                           'matches': matches, 'match_confidence': conf}
+            out_matches = {
+                "keypoints0": kpts0,
+                "keypoints1": kpts1,
+                "matches": matches,
+                "match_confidence": conf,
+            }
             np.savez(str(matches_path), **out_matches)
-        
-        #Organize match data
+
+        # Organize match data
         count = 0
-        for m in range(len(matches)): #Calculates number of valid matches
-            if(matches[m] != -1):
+        for m in range(len(matches)):  # Calculates number of valid matches
+            if matches[m] != -1:
                 count += 1
-        keypoint_pairs = -1*np.ones((count,4)) 
+        keypoint_pairs = -1 * np.ones((count, 4))
         inc = 0
         for n in range(len(matches)):
-            if(matches[n]!= -1):
-                
+            if matches[n] != -1:
+
                 keypoint_pairs[inc][0] = kpts0[n][0]
                 keypoint_pairs[inc][1] = kpts0[n][1]
                 keypoint_pairs[inc][2] = kpts1[matches[n]][0]
                 keypoint_pairs[inc][3] = kpts1[matches[n]][1]
                 # Every element of keypoint pairs will be list of 4 values, the x,y coords of a point in img1, and then x,y of corresponding point in img2
                 inc += 1
-        print(f'Done')
-
+        print(f"Done")
 
         # load reconstruction from colmap
-        cameras, images, points = read_model(path=opt.input_dir + '/sparse', ext='.bin')
+        cameras, images, points = read_model(path=opt.input_dir + "/sparse", ext=".bin")
 
-        print(f'Cameras: {len(cameras)}')
-        print(f'Images: {len(images)}')
-        print(f'3D points: {len(points)}')
+        print(f"Cameras: {len(cameras)}")
+        print(f"Images: {len(images)}")
+        print(f"3D points: {len(points)}")
 
-        indices = [c for c in cameras] 
-        dataList = [0,1]
+        indices = [c for c in cameras]
+        dataList = [0, 1]
         threshold = 1.5
-        
-       
-        for j in range(2): #range(2) is hard-coded here, it will only run get_image on 2 images, as we are only matching those 2 right now
+
+        for j in range(
+            2
+        ):  # range(2) is hard-coded here, it will only run get_image on 2 images, as we are only matching those 2 right now
             idx = indices[j]
-           
-            
+
             data = get_image(str(input_dir), idx)
-            dataList[j] = data #Each element in dataList is a dictionary containing the info about an image returned from get_image().
-        
+            dataList[
+                j
+            ] = data  # Each element in dataList is a dictionary containing the info about an image returned from get_image().
 
         validPoints1 = []
         validPoints2 = []
         groundTruthMatches = []
-        gtCount = 0 
+        gtCount = 0
         vpts0 = []
         vpts1 = []
-        #For every pair of keypoint coordinates found by superglue:
+        # For every pair of keypoint coordinates found by superglue:
         #  1) compare it to the coords of every point found in get_img/colmap (in dataList)
         #  2) Find the closest dataList point, save its location, distance to kpt, and colmap ID
         #  3) Repeat for keypoints found by superglue in second image:
-        #  4) See if both keypoints are within threshold distance. If they are, AND point to the same point (colmap ID) add to g.t matches 
+        #  4) See if both keypoints are within threshold distance. If they are, AND point to the same point (colmap ID) add to g.t matches
         for j in range(len(keypoint_pairs)):
             sID1 = j
             sID2 = j
-            x1s = keypoint_pairs[j][0]#Superglue xys from image 1 
+            x1s = keypoint_pairs[j][0]  # Superglue xys from image 1
             y1s = keypoint_pairs[j][1]
-            x2s = keypoint_pairs[j][2]#Superglue xys from image 2
+            x2s = keypoint_pairs[j][2]  # Superglue xys from image 2
             y2s = keypoint_pairs[j][3]
             distance1 = 10000000
-            for k in range(len(dataList[0]['xys'])):
-                x1c = dataList[0]['xys'][k][0]#Colmap xys from image 1
-                y1c = dataList[0]['xys'][k][1]
-                tempDistance1 = findDistance(x1s,y1s,x1c,y1c)
+            for k in range(len(dataList[0]["xys"])):
+                x1c = dataList[0]["xys"][k][0]  # Colmap xys from image 1
+                y1c = dataList[0]["xys"][k][1]
+                tempDistance1 = findDistance(x1s, y1s, x1c, y1c)
                 if tempDistance1 < distance1:
                     distance1 = tempDistance1
-                    gtID1 = dataList[0]['ids'][k] #this is the ground truth ID of the closest point to sg point
-        
+                    gtID1 = dataList[0]["ids"][
+                        k
+                    ]  # this is the ground truth ID of the closest point to sg point
+
             distance2 = 1000000
-            for k in range(len(dataList[1]['xys'])):
-                x2c = dataList[1]['xys'][k][0]#Colmap xys form image 2
-                y2c = dataList[1]['xys'][k][1]
-                tempDistance2 = findDistance(x2s,y2s,x2c,y2c)
+            for k in range(len(dataList[1]["xys"])):
+                x2c = dataList[1]["xys"][k][0]  # Colmap xys form image 2
+                y2c = dataList[1]["xys"][k][1]
+                tempDistance2 = findDistance(x2s, y2s, x2c, y2c)
                 if tempDistance2 < distance2:
                     distance2 = tempDistance2
-                    gtID2 = dataList[1]['ids'][k] #this is the ground truth ID of the closest point to sg point
+                    gtID2 = dataList[1]["ids"][
+                        k
+                    ]  # this is the ground truth ID of the closest point to sg point
 
-            if(distance1 < threshold and distance2 < threshold):
-                validPoints1.append([sID1,x1s,y1s,distance1,gtID1,'img0']) #valid points1 will have every superglue keypoint from 1st image: ID,xylocation,dist to gtpt, gtptID
-                validPoints2.append([sID2,x2s,y2s,distance2,gtID2,'img1']) #validpoints2 has sg points from img 2
+            if distance1 < threshold and distance2 < threshold:
+                validPoints1.append(
+                    [sID1, x1s, y1s, distance1, gtID1, "img0"]
+                )  # valid points1 will have every superglue keypoint from 1st image: ID,xylocation,dist to gtpt, gtptID
+                validPoints2.append(
+                    [sID2, x2s, y2s, distance2, gtID2, "img1"]
+                )  # validpoints2 has sg points from img 2
                 gtCount += 1
-                vpts0.append([x1s,y1s])
-                vpts1.append([x2s,y2s])
+                vpts0.append([x1s, y1s])
+                vpts1.append([x2s, y2s])
 
-        for f in range(gtCount): 
+        for f in range(gtCount):
 
-                if(validPoints1[f][0] == validPoints2[f][0] and validPoints1[f][4] == validPoints2[f][4]and gtCount>0):
-                    
-                    print("ADDED TO GROUND TRUTH MATCHES") 
-                    groundTruthMatches.append([validPoints1[f],validPoints1[f][4],validPoints1[f][3],validPoints2[f][3]])
+            if (
+                validPoints1[f][0] == validPoints2[f][0]
+                and validPoints1[f][4] == validPoints2[f][4]
+                and gtCount > 0
+            ):
+
+                print("ADDED TO GROUND TRUTH MATCHES")
+                groundTruthMatches.append(
+                    [
+                        validPoints1[f],
+                        validPoints1[f][4],
+                        validPoints1[f][3],
+                        validPoints2[f][3],
+                    ]
+                )
         # Next: get validPoints in a format to pass to the graphing funcs
-        # Keep the matching keypoints. **Next do own version of this but the threshold isn't just if -1 determined by s.glue but by colmap comaprison 
+        # Keep the matching keypoints. **Next do own version of this but the threshold isn't just if -1 determined by s.glue but by colmap comaprison
         valid = matches > -1
         mkpts0 = kpts0[valid]
         mkpts1 = kpts1[matches[valid]]
         mconf = conf[valid]
-        
+
         if do_eval:
             # Estimate the pose and compute the pose error.
-            assert len(pair) == 38, 'Pair does not have ground truth info'
+            assert len(pair) == 38, "Pair does not have ground truth info"
             K0 = np.array(pair[4:13]).astype(float).reshape(3, 3)
             K1 = np.array(pair[13:22]).astype(float).reshape(3, 3)
             T_0to1 = np.array(pair[22:]).astype(float).reshape(4, 4)
@@ -468,7 +561,7 @@ if __name__ == '__main__':
             precision = np.mean(correct) if len(correct) > 0 else 0
             matching_score = num_correct / len(kpts0) if len(kpts0) > 0 else 0
 
-            thresh = 1.  # In pixels relative to resized image size.
+            thresh = 1.0  # In pixels relative to resized image size.
             ret = estimate_pose(mkpts0, mkpts1, K0, K1, thresh)
             if ret is None:
                 err_t, err_R = np.inf, np.inf
@@ -477,86 +570,113 @@ if __name__ == '__main__':
                 err_t, err_R = compute_pose_error(T_0to1, R, t)
 
             # Write the evaluation results to disk.
-            out_eval = {'error_t': err_t,
-                        'error_R': err_R,
-                        'precision': precision,
-                        'matching_score': matching_score,
-                        'num_correct': num_correct,
-                        'epipolar_errors': epi_errs}
-            np.savez(str(eval_path), **out_eval) #np.savez to dump_match_pairs, but this is eval not coords
-            timer.update('eval')
+            out_eval = {
+                "error_t": err_t,
+                "error_R": err_R,
+                "precision": precision,
+                "matching_score": matching_score,
+                "num_correct": num_correct,
+                "epipolar_errors": epi_errs,
+            }
+            np.savez(
+                str(eval_path), **out_eval
+            )  # np.savez to dump_match_pairs, but this is eval not coords
+            timer.update("eval")
 
         if do_viz:
             # Visualize the matches.
             color = cm.jet(mconf)
             text = [
-                'SuperGlue',
-                'Keypoints: {}:{}'.format(len(kpts0), len(kpts1)),
-                'Matches: {}'.format(len(mkpts0)),
+                "SuperGlue",
+                "Keypoints: {}:{}".format(len(kpts0), len(kpts1)),
+                "Matches: {}".format(len(mkpts0)),
             ]
             if rot0 != 0 or rot1 != 0:
-                text.append('Rotation: {}:{}'.format(rot0, rot1))
+                text.append("Rotation: {}:{}".format(rot0, rot1))
 
             # Display extra parameter info.
-            k_thresh = matching.superpoint.config['keypoint_threshold']
-            m_thresh = matching.superglue.config['match_threshold']
+            k_thresh = matching.superpoint.config["keypoint_threshold"]
+            m_thresh = matching.superglue.config["match_threshold"]
             small_text = [
-                'Keypoint Threshold: {:.4f}'.format(k_thresh),
-                'Match Threshold: {:.2f}'.format(m_thresh),
-                'Image Pair: {}:{}'.format(stem0, stem1),
+                "Keypoint Threshold: {:.4f}".format(k_thresh),
+                "Match Threshold: {:.2f}".format(m_thresh),
+                "Image Pair: {}:{}".format(stem0, stem1),
             ]
 
             make_matching_plot(
-                image0, image1, kpts0, kpts1, mkpts0, mkpts1, color,
-                text, viz_path, opt.show_keypoints,
-                opt.fast_viz, opt.opencv_display, 'Matches', small_text)
-            
-            #changed this section version to use vpts, but throws error.
-            #vpts instead of kpts too
+                image0,
+                image1,
+                kpts0,
+                kpts1,
+                mkpts0,
+                mkpts1,
+                color,
+                text,
+                viz_path,
+                opt.show_keypoints,
+                opt.fast_viz,
+                opt.opencv_display,
+                "Matches",
+                small_text,
+            )
+
+            # changed this section version to use vpts, but throws error.
+            # vpts instead of kpts too
             # make_matching_plot(
             #     image0, image1, vpts0, vpts1, vpts0, vpts1, color,
             #     text, viz_path, opt.show_keypoints,
             #     opt.fast_viz, opt.opencv_display, 'Matches', small_text
             # )
 
-            timer.update('viz_match')
+            timer.update("viz_match")
 
         if do_viz_eval:
             # Visualize the evaluation results for the image pair.
             color = np.clip((epi_errs - 0) / (1e-3 - 0), 0, 1)
             color = error_colormap(1 - color)
-            deg, delta = ' deg', 'Delta '
+            deg, delta = " deg", "Delta "
             if not opt.fast_viz:
-                deg, delta = '°', '$\\Delta$'
-            e_t = 'FAIL' if np.isinf(err_t) else '{:.1f}{}'.format(err_t, deg)
-            e_R = 'FAIL' if np.isinf(err_R) else '{:.1f}{}'.format(err_R, deg)
+                deg, delta = "°", "$\\Delta$"
+            e_t = "FAIL" if np.isinf(err_t) else "{:.1f}{}".format(err_t, deg)
+            e_R = "FAIL" if np.isinf(err_R) else "{:.1f}{}".format(err_R, deg)
             text = [
-                'SuperGlue',
-                '{}R: {}'.format(delta, e_R), '{}t: {}'.format(delta, e_t),
-                'inliers: {}/{}'.format(num_correct, (matches > -1).sum()),
+                "SuperGlue",
+                "{}R: {}".format(delta, e_R),
+                "{}t: {}".format(delta, e_t),
+                "inliers: {}/{}".format(num_correct, (matches > -1).sum()),
             ]
             if rot0 != 0 or rot1 != 0:
-                text.append('Rotation: {}:{}'.format(rot0, rot1))
+                text.append("Rotation: {}:{}".format(rot0, rot1))
 
             # Display extra parameter info (only works with --fast_viz).
-            k_thresh = matching.superpoint.config['keypoint_threshold']
-            m_thresh = matching.superglue.config['match_threshold']
+            k_thresh = matching.superpoint.config["keypoint_threshold"]
+            m_thresh = matching.superglue.config["match_threshold"]
             small_text = [
-                'Keypoint Threshold: {:.4f}'.format(k_thresh),
-                'Match Threshold: {:.2f}'.format(m_thresh),
-                'Image Pair: {}:{}'.format(stem0, stem1),
+                "Keypoint Threshold: {:.4f}".format(k_thresh),
+                "Match Threshold: {:.2f}".format(m_thresh),
+                "Image Pair: {}:{}".format(stem0, stem1),
             ]
 
             make_matching_plot(
-                image0, image1, kpts0, kpts1, mkpts0,
-                mkpts1, color, text, viz_eval_path,
-                opt.show_keypoints, opt.fast_viz,
-                opt.opencv_display, 'Relative Pose', small_text)
+                image0,
+                image1,
+                kpts0,
+                kpts1,
+                mkpts0,
+                mkpts1,
+                color,
+                text,
+                viz_eval_path,
+                opt.show_keypoints,
+                opt.fast_viz,
+                opt.opencv_display,
+                "Relative Pose",
+                small_text,
+            )
 
-            timer.update('viz_eval')
+            timer.update("viz_eval")
 
-        timer.print('Finished pair {:5} of {:5}'.format(i, len(pairs)))
-      
+        timer.print("Finished pair {:5} of {:5}".format(i, len(pairs)))
 
     if opt.eval:
         # Collate the results into a final table and print to terminal.
@@ -566,33 +686,21 @@ if __name__ == '__main__':
         for pair in pairs:
             name0, name1 = pair[:2]
             stem0, stem1 = Path(name0).stem, Path(name1).stem
-            eval_path = output_dir / \
-                '{}_{}_evaluation.npz'.format(stem0, stem1)
+            eval_path = output_dir / "{}_{}_evaluation.npz".format(stem0, stem1)
             results = np.load(eval_path)
-            pose_error = np.maximum(results['error_t'], results['error_R'])
+            pose_error = np.maximum(results["error_t"], results["error_R"])
             pose_errors.append(pose_error)
-            precisions.append(results['precision'])
-            matching_scores.append(results['matching_score'])
+            precisions.append(results["precision"])
+            matching_scores.append(results["matching_score"])
         thresholds = [5, 10, 20]
         aucs = pose_auc(pose_errors, thresholds)
-        aucs = [100.*yy for yy in aucs]
-        prec = 100.*np.mean(precisions)
-        ms = 100.*np.mean(matching_scores)
-        print('Evaluation Results (mean over {} pairs):'.format(len(pairs)))
-        print('AUC@5\t AUC@10\t AUC@20\t Prec\t MScore\t')
-        print('{:.2f}\t {:.2f}\t {:.2f}\t {:.2f}\t {:.2f}\t'.format(
-            aucs[0], aucs[1], aucs[2], prec, ms))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        aucs = [100.0 * yy for yy in aucs]
+        prec = 100.0 * np.mean(precisions)
+        ms = 100.0 * np.mean(matching_scores)
+        print("Evaluation Results (mean over {} pairs):".format(len(pairs)))
+        print("AUC@5\t AUC@10\t AUC@20\t Prec\t MScore\t")
+        print(
+            "{:.2f}\t {:.2f}\t {:.2f}\t {:.2f}\t {:.2f}\t".format(
+                aucs[0], aucs[1], aucs[2], prec, ms
+            )
+        )
