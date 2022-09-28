@@ -229,7 +229,18 @@ def pairwise_match(opt, pair):
         dataList[
             j
         ] = data  # Each element in dataList is a dictionary containing the info about an image returned from get_image().
-    print(data)
+    data_one = {
+        "R": dataList[0]["R"],
+        "depth": dataList[0]["depth"],
+        "T": dataList[0]["T"],
+        "q": dataList[0]["q"],
+    }
+    data_two = {
+        "R": dataList[1]["R"],
+        "depth": dataList[1]["depth"],
+        "T": dataList[1]["T"],
+        "q": dataList[1]["q"],
+    }
     validPoints1 = []
     validPoints2 = []
     groundTruthMatches = []
