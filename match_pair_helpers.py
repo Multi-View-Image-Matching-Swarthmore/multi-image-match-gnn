@@ -83,14 +83,22 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     u, v = [], []
     K_1 = data_one["K"]
     K_2 = data_two["K"]
+
+    depth_1 = data_one["depth"]
+    depth_2 = data_two["depth"]
+
+    R1 = data_one["R"]
+    R2 = data_two["R"]
+
     for i in range(3):
         u.append(mkpts0[i])
         v.append(mkpts1[i])
 
     p = np.linalg.solve(K_1, u)
     q = np.linalg.solve(K_2, v)
-    print(p)
-    print(q)
+
+    wp_est1 = R1 @ (depth_1 * p)
+    print(wp_est1)
 
 
 def pairwise_match(opt, pair):
