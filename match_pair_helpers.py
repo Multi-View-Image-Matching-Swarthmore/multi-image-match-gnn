@@ -97,19 +97,19 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     T1 = data_one["T"]
     T2 = data_two["T"]
 
-    print(R1.shape)
     u = get_homogenous_coords(mkpts0[0])
     v = get_homogenous_coords(mkpts1[0])
-    print(K_1.shape)
     p = np.linalg.solve(K_1, u)
     q = np.linalg.solve(K_2, v)
     wp_est1 = np.array(R1) @ np.array(depth_1[int(u[0]), int(u[1])] * p)
-    print(T1)
     wp_est1 += T1  # issue
-    wp_est2 = np.array(R2) @ np.array(depth_2[v[0], v[1]] * q)
+    wp_est2 = np.array(R2) @ np.array(depth_2[int(v[0]), int(v[1])] * q)
     wp_est2 += T2
+    error = np.linalg.norm((wp_est1 - wp_est2))
 
     print(wp_est1)
+    print(wp_est2)
+    print(error)
 
 
 def pairwise_match(opt, pair):
