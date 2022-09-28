@@ -91,11 +91,11 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     depth_1 = data_one["depth"]
     depth_2 = data_two["depth"]
 
-    R1 = data_one["R"]
-    R2 = data_two["R"]
+    R1 = data_one["R"].T
+    R2 = data_two["R"].T
 
-    T1 = data_one["T"]
-    T2 = data_two["T"]
+    T1 = -R1 @ data_one["T"]
+    T2 = -R2 @ data_two["T"]
 
     u = get_homogenous_coords(mkpts0[0])
     v = get_homogenous_coords(mkpts1[0])
