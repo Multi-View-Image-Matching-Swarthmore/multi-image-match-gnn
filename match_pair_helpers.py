@@ -105,6 +105,9 @@ def pairwise_match(opt, pair):
     image_dir = input_dir / "images"
 
     # for i, pair in enumerate(pairs):
+    print(pair)
+    pair = pair[0]
+    print(pair)
     name0, name1 = pair[:2]
     stem0, stem1 = Path(name0).stem, Path(name1).stem
     matches_path = output_dir / "{}_{}_matches.npz".format(stem0, stem1)
