@@ -97,6 +97,8 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
 
     T1 = -R1 @ data_one["T"]  # -R1 @
     T2 = -R2 @ data_two["T"]  # -R2 @
+    print("T1:")
+    print(T1)
 
     u = get_homogenous_coords(mkpts0)
     v = get_homogenous_coords(mkpts1)
