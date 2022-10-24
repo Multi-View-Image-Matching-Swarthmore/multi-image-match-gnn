@@ -88,7 +88,7 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     K_1 = data_one["K"]
     K_2 = data_two["K"]
 
-    print(pair)
+    # print(pair)
     depth_1 = data_one["depth"]
     depth_2 = data_two["depth"]
 
@@ -100,8 +100,8 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
 
     u = get_homogenous_coords(mkpts0)
     v = get_homogenous_coords(mkpts1)
-    print(u)
-    print(v)
+    # print(u)
+    # print(v)
     p = np.linalg.solve(K_1, u)
     q = np.linalg.solve(K_2, v)
     wp_est1 = np.array(R1) @ np.array(depth_1[int(u[0]), int(u[1])] * p)
@@ -459,6 +459,8 @@ def pairwise_match(opt, pair):
 
         timer.update("viz_match")
 
+    print("Normed errors:")
+    print(normed_error)
     color = np.clip((np.array(normed_error) - 0) / (1e-3 - 0), 0, 1)
     color = error_colormap(1 - color)
     make_matching_plot(
