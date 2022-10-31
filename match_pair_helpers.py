@@ -404,7 +404,7 @@ def pairwise_match(opt, pair):
             normed_error.append(reprojected)
         else:
             count += 1
-    print(f"count of errors: {count}")
+    print(f"count of errors: {count} out of {len(mkpts0)}")
     if do_eval:
         # Estimate the pose and compute the pose error.
         assert len(pair) == 38, "Pair does not have ground truth info"
