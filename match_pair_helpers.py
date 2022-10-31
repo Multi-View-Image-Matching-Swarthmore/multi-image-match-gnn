@@ -131,7 +131,7 @@ def reprojection_error(pair, mkpts0, mkpts1, data_one, data_two):
     R2 = data_two["R"].T
 
     T1 = -R1 @ data_one["T"]  # -R1 @
-    T2 = -R2 @ data_two["T"]  # -R2 @
+    T2 = data_two["T"]  # -R2 @
 
     u = get_homogenous_coords(mkpts0)
     v = get_homogenous_coords(mkpts1)
