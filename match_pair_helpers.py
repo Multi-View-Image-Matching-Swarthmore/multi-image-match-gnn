@@ -138,18 +138,19 @@ def reprojection_error(pair, mkpts0, mkpts1, data_one, data_two):
     # print(u)
     # print(v)
     p = np.linalg.solve(K_1, u)
-    q = np.linalg.solve(K_2, v)
+    # q = np.linalg.solve(K_2, v)
     wp_est1 = np.array(R1) @ np.array(depth_1[int(u[0]), int(u[1])] * p)
     wp_est1 += T1
     point1_in_f2 = (np.array(R2) @ wp_est1) + T2
     tolerance = 1e-2
     if abs(depth_2[int(v[0]), int(v[1])]) > tolerance:
         point1_in_f2 /= depth_2[int(v[0]), int(v[1])]
+        point1_in_f2 = K_2 @ point1_in_f2
     else:
         return None
     # wp_est2 = np.array(R2) @ np.array(depth_2[v[0], v[1]] * q)
     # wp_est2 += T2
-    error = np.linalg.norm((point1_in_f2 - q))
+    error = np.linalg.norm((point1_in_f2 - v))
 
     return error
 
