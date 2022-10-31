@@ -118,6 +118,37 @@ def calculate_distance(pair, mkpts0, mkpts1, data_one, data_two):
     print(error)
 
 
+def reprojection_error(pair, mkpts0, mkpts1, data_one, data_two):
+    u, v = [], []
+    K_1 = data_one["K"]
+    K_2 = data_two["K"]
+
+    # print(pair)
+    depth_1 = data_one["depth"]
+    depth_2 = data_two["depth"]
+
+    R1 = data_one["R"].T
+    R2 = data_two["R"].T
+
+    T1 = -R1 @ data_one["T"]  # -R1 @
+    T2 = -R2 @ data_two["T"]  # -R2 @
+
+    u = get_homogenous_coords(mkpts0)
+    v = get_homogenous_coords(mkpts1)
+    # print(u)
+    # print(v)
+    p = np.linalg.solve(K_1, u)
+    q = np.linalg.solve(K_2, v)
+    wp_est1 = np.array(R1) @ np.array(depth_1[u[0], u[1]] * p)
+    wp_est1 += T1
+    point1_in_f2 = (np.array(R2) @ wp_est1) - T2
+    # wp_est2 = np.array(R2) @ np.array(depth_2[v[0], v[1]] * q)
+    # wp_est2 += T2
+    error = np.linalg.norm((point1_in_f2 - np.array(depth_2[v[0], v[1]] * q)))
+
+    return error
+
+
 def pairwise_match(opt, pair):
     # Load models
     device = "cuda" if torch.cuda.is_available() and not opt.force_cpu else "cpu"
@@ -359,8 +390,11 @@ def pairwise_match(opt, pair):
     # return pair, mkpts0, mkpts1, data_one, data_two
     normed_error = []
     for i in range(len(mkpts0)):  # len(mkpts0)
+        # normed_error.append(
+        #     calculate_distance(pair, mkpts0[i], mkpts1[i], data_one, data_two)
+        # )
         normed_error.append(
-            calculate_distance(pair, mkpts0[i], mkpts1[i], data_one, data_two)
+            reprojection_error(pair, mkpts0[i], mkpts1[i], data_one, data_two)
         )
     if do_eval:
         # Estimate the pose and compute the pose error.
