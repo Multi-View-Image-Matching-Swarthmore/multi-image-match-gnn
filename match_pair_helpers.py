@@ -142,7 +142,11 @@ def reprojection_error(pair, mkpts0, mkpts1, data_one, data_two):
     wp_est1 = np.array(R1) @ np.array(depth_1[int(u[0]), int(u[1])] * p)
     wp_est1 += T1
     point1_in_f2 = (np.array(R2) @ wp_est1) + T2
-    point1_in_f2 /= depth_2[int(v[0]), int(v[1])]
+    tolerance = 1e-2
+    if abs(depth_2[int(v[0]), int(v[1])]) > tolerance:
+        point1_in_f2 /= depth_2[int(v[0]), int(v[1])]
+    else:
+        return None
     # wp_est2 = np.array(R2) @ np.array(depth_2[v[0], v[1]] * q)
     # wp_est2 += T2
     error = np.linalg.norm((point1_in_f2 - q))
@@ -390,13 +394,17 @@ def pairwise_match(opt, pair):
     mconf = conf[valid]
     # return pair, mkpts0, mkpts1, data_one, data_two
     normed_error = []
+    count = 0
     for i in range(len(mkpts0)):  # len(mkpts0)
         # normed_error.append(
         #     calculate_distance(pair, mkpts0[i], mkpts1[i], data_one, data_two)
         # )
-        normed_error.append(
-            reprojection_error(pair, mkpts0[i], mkpts1[i], data_one, data_two)
-        )
+        reprojected = reprojection_error(pair, mkpts0[i], mkpts1[i], data_one, data_two)
+        if reprojected:
+            normed_error.append(reprojected)
+        else:
+            count += 1
+    print(f"count of errors: {count}")
     if do_eval:
         # Estimate the pose and compute the pose error.
         assert len(pair) == 38, "Pair does not have ground truth info"
