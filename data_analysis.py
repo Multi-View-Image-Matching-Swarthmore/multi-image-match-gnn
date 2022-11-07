@@ -124,4 +124,4 @@ if __name__ == "__main__":
     # )
     idx = opt.image_idx
     image_dict = get_image(opt, str(input_dir), idx)
-    print(np.array(image_dict["depth"]).size)
+    print(np.array(image_dict["depth"]).shape)
