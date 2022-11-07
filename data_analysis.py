@@ -84,10 +84,10 @@ def get_image(opt, src, idx):
 def depth_plot(image_dict):
     name = image_dict["image_name"]
     depths = np.array(image_dict["depth"])
-    x_arr = range(len(depths))
+    x_arr = range(len(depths[0]))
     avgs = []
     for x in x_arr:
-        avgs.append(np.average(depths[x]))
+        avgs.append(np.average(depths[:, x]))
 
     plt.plot(x_arr, avgs)
     plt.xlabel("X-coord")
