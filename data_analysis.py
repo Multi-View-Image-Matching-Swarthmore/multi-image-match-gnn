@@ -101,6 +101,12 @@ if __name__ == "__main__":
         "the visualization images are written",
     )
 
+    parser.add_argument(
+        "--image_idx",
+        type=int,
+        help="index of image to analyse.",
+    )
+
     opt = parser.parse_args()
     # print(opt)
     input_dir = Path(opt.input_dir)
@@ -117,6 +123,6 @@ if __name__ == "__main__":
     # image1, inp1, scales1 = read_image(
     #     image_dir / name1, device, opt.resize, rot1, opt.resize_float
     # )
-    idx = 0
+    idx = opt.image_idx
     image_dict = get_image(opt, str(input_dir), idx)
     print(image_dict)
