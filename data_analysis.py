@@ -40,6 +40,7 @@ torch.set_grad_enabled(False)
 def get_image(opt, src, idx):
     cameras, images, points = read_model(path=opt.input_dir + "/sparse", ext=".bin")
     im = imread(src + "/images/" + images[idx].name)
+    print(images[idx].name)
     depth = read_array(
         src + "/stereo/depth_maps/" + images[idx].name + ".photometric.bin"
     )
