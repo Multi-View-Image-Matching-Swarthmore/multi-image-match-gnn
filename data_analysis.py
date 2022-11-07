@@ -97,6 +97,32 @@ def depth_plot(image_dict):
     print(f"depth of size {depths.shape}")
 
 
+def depth_scatter_plot(image_dict):
+    name = image_dict["image_name"]
+    depths = np.array(image_dict["depth"])
+    points = []
+    for x in range(len(depths[0])):
+        for y in range(len(depths)):
+            points.append((x, depths[y][x]))
+    points = np.array(points)
+
+    plt.scatter(points[:, 0], points[:, 1])
+    plt.xlabel("X-coord")
+    plt.ylabel("average depth")
+    plt.savefig(f"depth_scatter_plot_{name}.png")
+    print(f"Image being analysed is {name}")
+    print(f"depth of size {depths.shape}")
+
+
+# def combined_reprojection(image_dict):
+#     u, v = [], []
+#     K_1 = image_dict["K"]
+#     depth_1 = image_dict["depth"]
+#     R1 = image_dict["R"].T
+#     T1 = -R1 @ image_dict["T"]
+#     u = get_homogenous_coords(mkpts0)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Image analysis tools.",
@@ -129,4 +155,5 @@ if __name__ == "__main__":
 
     idx = opt.image_idx
     image_dict = get_image(opt, str(input_dir), idx)
-    depth_plot(image_dict)
+    # depth_plot(image_dict)
+    depth_scatter_plot(image_dict)
