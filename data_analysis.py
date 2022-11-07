@@ -80,6 +80,20 @@ def get_image(opt, src, idx):
     }
 
 
+def depth_plot(image_dict):
+    print(image_dict.keys())
+    depths = np.array(image_dict["depth"])
+    x_arr = range(len(depths))
+    avgs = []
+    for x in x_arr:
+        avgs.append(np.average(depths[x]))
+
+    plt.plot(x_arr, avgs)
+    plt.xlabel("X-coord")
+    plt.ylabel("average depth")
+    plt.savefig(f"depth_plot.png")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Image analysis tools.",
@@ -112,14 +126,4 @@ if __name__ == "__main__":
 
     idx = opt.image_idx
     image_dict = get_image(opt, str(input_dir), idx)
-    depths = np.array(image_dict["depth"])
-
-    x_arr = range(len(depths))
-    avgs = []
-    for x in x_arr:
-        avgs.append(np.average(depths[x]))
-
-    plt.plot(x_arr, avgs)
-    plt.xlabel("X-coord")
-    plt.ylabel("average depth")
-    plt.savefig("depth_plot.png")
+    depth_plot(image_dict)
