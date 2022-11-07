@@ -16,6 +16,7 @@ import h5py
 from time import time
 
 from matplotlib import cm
+import matplotlib.pyplot as plt
 
 from models.matching import Matching
 from models.utils import (
@@ -107,21 +108,18 @@ if __name__ == "__main__":
     )
 
     opt = parser.parse_args()
-    # print(opt)
     input_dir = Path(opt.input_dir)
-    # image_dir = input_dir / "images"
-    # device = "cuda" if torch.cuda.is_available() and not opt.force_cpu else "cpu"
-    # print('Running inference on device "{}"'.format(device))
 
-    # pair = pair[0]
-    # name0, name1 = pair[:2]
-    # rot0, rot1 = 0, 0
-    # image0, inp0, scales0 = read_image(
-    #     image_dir / name0, device, opt.resize, rot0, opt.resize_float
-    # )
-    # image1, inp1, scales1 = read_image(
-    #     image_dir / name1, device, opt.resize, rot1, opt.resize_float
-    # )
     idx = opt.image_idx
     image_dict = get_image(opt, str(input_dir), idx)
-    print(np.array(image_dict["depth"]).shape)
+    depths = np.array(image_dict["depth"])
+
+    x_arr = range(len(depths))
+    avgs = []
+    for x in x_arr:
+        avgs.append(np.average(depths[x]))
+
+    plt.plot(x_arr, avgs)
+    plt.xlabel("X-coord")
+    plt.ylabel("average depth")
+    plt.savefig("depth_plot.png")
