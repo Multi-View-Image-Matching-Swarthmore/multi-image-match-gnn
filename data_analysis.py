@@ -40,7 +40,6 @@ torch.set_grad_enabled(False)
 def get_image(opt, src, idx):
     cameras, images, points = read_model(path=opt.input_dir + "/sparse", ext=".bin")
     im = imread(src + "/images/" + images[idx].name)
-    print(images[idx].name)
     depth = read_array(
         src + "/stereo/depth_maps/" + images[idx].name + ".photometric.bin"
     )
@@ -78,11 +77,13 @@ def get_image(opt, src, idx):
         "xys": p,
         "ids": pids,
         "valid": v,
+        "image_name": images[idx].name,
     }
 
 
 def depth_plot(image_dict):
-    print(image_dict.keys())
+    name = image_dict["image_name"]
+    print(f"Image being analysed is {name}")
     depths = np.array(image_dict["depth"])
     x_arr = range(len(depths))
     avgs = []
@@ -92,7 +93,7 @@ def depth_plot(image_dict):
     plt.plot(x_arr, avgs)
     plt.xlabel("X-coord")
     plt.ylabel("average depth")
-    plt.savefig(f"depth_plot.png")
+    plt.savefig(f"depth_plot_{name}.png")
 
 
 if __name__ == "__main__":
