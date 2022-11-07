@@ -83,7 +83,6 @@ def get_image(opt, src, idx):
 
 def depth_plot(image_dict):
     name = image_dict["image_name"]
-    print(f"Image being analysed is {name}")
     depths = np.array(image_dict["depth"])
     x_arr = range(len(depths))
     avgs = []
@@ -94,6 +93,8 @@ def depth_plot(image_dict):
     plt.xlabel("X-coord")
     plt.ylabel("average depth")
     plt.savefig(f"depth_plot_{name}.png")
+    print(f"Image being analysed is {name}")
+    print(f"depth of size {depths.shape}")
 
 
 if __name__ == "__main__":
