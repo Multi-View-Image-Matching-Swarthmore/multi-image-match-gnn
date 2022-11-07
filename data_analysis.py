@@ -106,21 +106,25 @@ def depth_scatter_plot(image_dict):
             points.append((x, depths[y][x]))
     points = np.array(points)
 
+    # make markers finer
+    # add colmap for y values
     plt.scatter(points[:, 0], points[:, 1])
     plt.xlabel("X-coord")
-    plt.ylabel("average depth")
+    plt.ylabel("depth")
     plt.savefig(f"depth_scatter_plot_{name}.png")
     print(f"Image being analysed is {name}")
     print(f"depth of size {depths.shape}")
 
 
-# def combined_reprojection(image_dict):
-#     u, v = [], []
-#     K_1 = image_dict["K"]
-#     depth_1 = image_dict["depth"]
-#     R1 = image_dict["R"].T
-#     T1 = -R1 @ image_dict["T"]
-#     u = get_homogenous_coords(mkpts0)
+def combined_reprojection(image_dict):
+    u, v = [], []
+    K_1 = image_dict["K"]
+    depth_1 = image_dict["depth"]
+    R1 = image_dict["R"].T
+    T1 = -R1 @ image_dict["T"]
+    # np meshgrid, each r,c (or c,r) is [x,y,z] vector
+    # use that as u and apply whole transformation to it
+    u = get_homogenous_coords(mkpts0)
 
 
 if __name__ == "__main__":
