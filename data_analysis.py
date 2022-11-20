@@ -97,34 +97,67 @@ def depth_plot(image_dict):
     print(f"depth of size {depths.shape}")
 
 
+# Added y-pos coloring and color bar
 def depth_scatter_plot(image_dict):
     name = image_dict["image_name"]
     depths = np.array(image_dict["depth"])
     points = []
     for x in range(len(depths[0])):
         for y in range(len(depths)):
-            points.append((x, depths[y][x]))
+            points.append((x, depths[y][x], y))
     points = np.array(points)
 
-    # make markers finer
-    # add colmap for y values
-    plt.scatter(points[:, 0], points[:, 1])
+    cbar = plt.scatter(points[:, 0], points[:, 1], c=points[:, 2], s=1)
     plt.xlabel("X-coord")
     plt.ylabel("depth")
+    plt.colorbar(cbar)
     plt.savefig(f"depth_scatter_plot_{name}.png")
     print(f"Image being analysed is {name}")
     print(f"depth of size {depths.shape}")
 
 
-def combined_reprojection(image_dict):
-    u, v = [], []
+def reproj(image_dict):
     K_1 = image_dict["K"]
     depth_1 = image_dict["depth"]
     R1 = image_dict["R"].T
     T1 = -R1 @ image_dict["T"]
+    im = image_dict["image"]
+    height = len(im)
+    width = len(im[0])
+
+    xs, ys = np.meshgrid(np.arange(0, height), np.arange(0, width))
+    zs = np.ones((width, height))
+
+    combined = np.stack((xs, ys, zs), axis=2)
+    # x, y indexing
+    combined_u = np.transpose(combined, axes=(1, 0, 2))
     # np meshgrid, each r,c (or c,r) is [x,y,z] vector
     # use that as u and apply whole transformation to it
-    u = get_homogenous_coords(mkpts0)
+    combined_u = np.expand_dims(combined_u, 3)
+    p = np.linalg.solve(K_1, combined_u)
+
+    combined_u = combined_u.astype(int)
+
+    wp_est1 = np.array(R1) @ np.array(
+        depth_1[combined_u[:, :, 0], combined_u[:, :, 1]][:, :, np.newaxis] * p
+    )
+    wp_est1 = wp_est1.squeeze()
+
+    wp_est1 += T1
+    return wp_est1
+
+
+def combined_reprojection(image_dict_1, image_dict_2):
+    im_1 = reproj(image_dict_1)
+    im_2 = reproj(image_dict_2)
+
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+    ax1.scatter(im_1[:, :, 1], im_1[:, :, 0], s=1)
+    ax1.scatter(im_2[:, :, 1], im_2[:, :, 0], s=1)
+    plt.xlabel("X-coord")
+    plt.ylabel("Y-coord")
+    plt.savefig(f"reproj_scatter_plot.png")
 
 
 if __name__ == "__main__":
@@ -136,7 +169,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_dir",
         type=str,
-        default="/datasets/reichstag/reichstag/dense/sparse/cameras.bin",
+        default="/datasets/reichstag/reichstag/dense",
         help="Path to the directory that contains the data",
     )
 
@@ -154,10 +187,20 @@ if __name__ == "__main__":
         help="index of image to analyse.",
     )
 
+    parser.add_argument(
+        "--image_idx_2",
+        type=int,
+        help="index of image to analyse.",
+    )
+
     opt = parser.parse_args()
     input_dir = Path(opt.input_dir)
 
     idx = opt.image_idx
+    idx_2 = opt.image_idx_2
     image_dict = get_image(opt, str(input_dir), idx)
     # depth_plot(image_dict)
-    depth_scatter_plot(image_dict)
+    # depth_scatter_plot(image_dict)
+    combined_reprojection(
+        get_image(opt, str(input_dir), idx), get_image(opt, str(input_dir), idx_2)
+    )
