@@ -136,7 +136,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_dir",
         type=str,
-        default="data/phototourism/reichstag/dense",
+        default="/datasets/reichstag/reichstag/dense/sparse/cameras.bin",
         help="Path to the directory that contains the data",
     )
 
