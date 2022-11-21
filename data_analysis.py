@@ -119,8 +119,8 @@ def depth_scatter_plot(image_dict):
 def reproj(image_dict):
     K_1 = image_dict["K"]
     depth_1 = image_dict["depth"]
-    R1 = image_dict["R"].T
-    T1 = -R1 @ image_dict["T"]
+    R1 = image_dict["R"]
+    T1 = image_dict["T"]
     im = image_dict["image"]
     height = len(im)
     width = len(im[0])
