@@ -200,7 +200,7 @@ if __name__ == "__main__":
     idx_2 = opt.image_idx_2
     image_dict = get_image(opt, str(input_dir), idx)
     # depth_plot(image_dict)
-    # depth_scatter_plot(image_dict)
-    combined_reprojection(
-        get_image(opt, str(input_dir), idx), get_image(opt, str(input_dir), idx_2)
-    )
+    depth_scatter_plot(image_dict)
+    # combined_reprojection(
+    #     get_image(opt, str(input_dir), idx), get_image(opt, str(input_dir), idx_2)
+    # )
